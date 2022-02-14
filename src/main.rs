@@ -1,39 +1,30 @@
 #![no_std]
 #![no_main]
 
-use cortex_m_rt::{entry, exception, ExceptionFrame};
+use cortex_m_rt::entry;
+use core::panic::PanicInfo;
 
-use rp_pico::hal::{
-    i2c,
-    gpio,
-    gpio::pin::{FunctionI2C, Pin},
-    gpio::pin::bank0::{
-        Gpio4, Gpio5, Gpio25, Gpio12, Gpio13, Pins
-    },
-    pac,
-    sio::Sio,
-    clocks::{init_clocks_and_plls, Clock},
-    Timer, timer,
-    watchdog::Watchdog,
-};
+#[panic_handler]
+pub fn panic(_reason: &PanicInfo) -> ! {
+    loop {}
+}
 
-use defmt::*;
-use defmt_rtt as _;
 
-//use panic_halt as _;
-use panic_semihosting as _;
+pub fn foo(val: u128) -> u128 {
+    let hi = val >> 64;
+    let prod = hi * hi;
+    let (sum, carry) = prod.overflowing_add(prod);
+    prod + (sum >> 64) + (u128::from(carry) << 64)
+}
 
-type Num = fixed::FixedI64<typenum::U32>;
 
 #[entry]
 fn main() -> ! {
-    info!("loop!");
-    let number = Num::from_num(0.001f64);
-
-    info!("value: {}", number.int_log2());
-
-
-    loop {
-
+    for i in 0..200 {
+        let x = foo(i);
+        if x > 190 {
+            loop {}
+        }
     }
+    loop {}
 }
